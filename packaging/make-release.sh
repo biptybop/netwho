@@ -8,6 +8,11 @@ cd "$root"
 version="$(sed -n 's/^version: \([0-9.]*\).*/\1/p' pubspec.yaml)"
 out="dist/$version"
 
+if ! grep -q "applicationVersion: '$version'" lib/ui/app_menu.dart; then
+  echo "The About dialog (lib/ui/app_menu.dart) doesn't say $version; update it first." >&2
+  exit 1
+fi
+
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "Working tree has uncommitted changes; commit first so the release matches the tag." >&2
   exit 1

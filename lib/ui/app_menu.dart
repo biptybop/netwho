@@ -95,7 +95,7 @@ class AppMenu extends StatelessWidget {
     showAboutDialog(
       context: context,
       applicationName: 'NetWho',
-      applicationVersion: '1.0.0',
+      applicationVersion: '1.1.0',
       applicationIcon: Image.asset('assets/icon/icon.png', width: 48, height: 48),
       children: const [
         Text(
