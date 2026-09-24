@@ -6,22 +6,32 @@ import '../models/device.dart';
 import '../net/ipv4.dart';
 import '../net/tools.dart';
 import '../net/wol.dart';
+import '../state/range_scan_controller.dart';
 import '../state/scan_controller.dart';
 import '../state/settings_controller.dart';
 import '../theme.dart';
 import 'app_menu.dart';
 import 'format.dart';
+import 'range_scan_page.dart';
 import 'tool_views.dart';
 
 class ToolsPage extends StatelessWidget {
-  const ToolsPage({super.key, required this.scanner, required this.settings});
+  const ToolsPage({
+    super.key,
+    required this.scanner,
+    required this.settings,
+    required this.ranges,
+  });
 
   final ScanController scanner;
   final SettingsController settings;
+  final RangeScanController ranges;
 
   @override
   Widget build(BuildContext context) {
     final tools = [
+      (Icons.travel_explore, 'Range scan', 'Scan other subnets or custom IP ranges',
+          () => RangeScanPage(ranges: ranges, scanner: scanner)),
       (Icons.public, 'My internet connection', 'Public IP address and provider',
           () => _NetworkInfoTool(scanner: scanner)),
       (Icons.speed, 'Speed test', 'Download, upload and latency',

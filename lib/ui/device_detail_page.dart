@@ -45,7 +45,11 @@ class DeviceDetailPage extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               children: [
-                _Header(device: d, onTypeTap: () => _pickType(context)),
+                _Header(
+                  device: d,
+                  checked: scanner.hasScanned,
+                  onTypeTap: () => _pickType(context),
+                ),
                 const SizedBox(height: 16),
                 Wrap(
                   spacing: 8,
@@ -135,7 +139,9 @@ class DeviceDetailPage extends StatelessWidget {
 
   List<Widget> _detailRows(BuildContext context, Device d) {
     final rows = <(String, String?)>[
-      ('Status', d.online ? 'Online' : 'Offline · last seen ${timeAgo(d.lastSeen)}'),
+      ('Status', d.online
+          ? 'Online'
+          : '${scanner.hasScanned ? 'Offline' : 'Not checked yet'} · last seen ${timeAgo(d.lastSeen)}'),
       ('IP address', d.ip),
       ('MAC address', d.mac == null
           ? null
@@ -343,9 +349,10 @@ String _serviceLabel(String s) {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.device, required this.onTypeTap});
+  const _Header({required this.device, required this.checked, required this.onTypeTap});
 
   final Device device;
+  final bool checked;
   final VoidCallback onTypeTap;
 
   @override
@@ -384,7 +391,7 @@ class _Header extends StatelessWidget {
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      [d.type.label, d.online ? 'Online' : 'Offline', ...tags].join('  ·  '),
+                      [d.type.label, d.online ? 'Online' : checked ? 'Offline' : 'Not checked yet', ...tags].join('  ·  '),
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),

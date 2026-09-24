@@ -106,8 +106,10 @@ class _DevicesPageState extends State<DevicesPage> {
     final offline = all - scanner.onlineCount;
     final options = [
       (DeviceFilter.all, 'All ($all)'),
-      (DeviceFilter.online, 'Online (${scanner.onlineCount})'),
-      if (offline > 0) (DeviceFilter.offline, 'Offline ($offline)'),
+      if (scanner.hasScanned || scanner.scanning) ...[
+        (DeviceFilter.online, 'Online (${scanner.onlineCount})'),
+        if (offline > 0 && !scanner.scanning) (DeviceFilter.offline, 'Offline ($offline)'),
+      ],
       if (scanner.newCount > 0) (DeviceFilter.fresh, 'New (${scanner.newCount})'),
     ];
     if (!options.any((o) => o.$1 == _filter)) _filter = DeviceFilter.all;
@@ -193,7 +195,12 @@ class _NetworkCard extends StatelessWidget {
                 spacing: 24,
                 runSpacing: 8,
                 children: [
-                  _Stat(label: 'Online', value: '${scanner.onlineCount}'),
+                  _Stat(
+                    label: 'Online',
+                    value: scanner.hasScanned || scanner.scanning
+                        ? '${scanner.onlineCount}'
+                        : '—',
+                  ),
                   if (scanner.newCount > 0)
                     _Stat(label: 'New', value: '${scanner.newCount}', highlight: true),
                   _Stat(label: 'Known', value: '${scanner.devices.length}'),
@@ -279,7 +286,7 @@ class _EmptyState extends StatelessWidget {
         ? 'Looking for devices…'
         : filtered
             ? 'Nothing matches.'
-            : 'No devices yet. Tap Scan.';
+            : 'No devices yet. Tap Scan to look for them.';
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),

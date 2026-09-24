@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:netwho/models/device.dart';
 import 'package:netwho/state/device_store.dart';
+import 'package:netwho/state/range_scan_controller.dart';
 import 'package:netwho/state/scan_controller.dart';
 import 'package:netwho/state/settings_controller.dart';
 import 'package:netwho/theme.dart';
 import 'package:netwho/ui/device_detail_page.dart';
 import 'package:netwho/ui/devices_page.dart';
+import 'package:netwho/ui/range_scan_page.dart';
 import 'package:netwho/ui/tools_page.dart';
 
 ScanController _scanner() {
-  final s = ScanController(DeviceStore());
+  final s = ScanController(DeviceStore())..hasScanned = true;
   s.devices = [
     Device(ip: '192.168.1.1', mac: '80:cc:9c:28:ab:96')
       ..isGateway = true
@@ -79,13 +81,39 @@ void main() {
 
   testWidgets('tools page lists tools', (tester) async {
     final scanner = _scanner();
-    await tester.pumpWidget(_app(ToolsPage(scanner: scanner, settings: SettingsController())));
-    for (final t in ['Speed test', 'Ping', 'Traceroute', 'Port scan', 'DNS lookup', 'Wake on LAN']) {
+    await tester.pumpWidget(_app(ToolsPage(scanner: scanner, settings: SettingsController(), ranges: RangeScanController())));
+    for (final t in ['Range scan', 'Speed test', 'Ping', 'Traceroute', 'Port scan', 'DNS lookup', 'Wake on LAN']) {
       expect(find.text(t), findsOneWidget);
     }
     await tester.tap(find.text('Wake on LAN'));
     await tester.pumpAndSettle();
     expect(find.text('MAC address'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('range scan page previews input and shows results', (tester) async {
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final ranges = RangeScanController()
+      ..hosts = [RangeHost('10.2.0.5', 4, {22, 443})..hostname = 'core-sw1.corp']
+      ..total = 254
+      ..finishedAt = DateTime.now()
+      ..elapsed = const Duration(seconds: 9);
+    await tester.pumpWidget(_app(RangeScanPage(ranges: ranges, scanner: _scanner())));
+    await tester.enterText(find.byType(TextField).first, '10.2.0.0/24, 10.3.1.1-10');
+    await tester.pump();
+    expect(find.textContaining('264 addresses'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, '10.2.0.0/24, bogus');
+    await tester.pump();
+    expect(find.text('Not understood: bogus'), findsOneWidget);
+    expect(find.textContaining('core-sw1.corp'), findsOneWidget);
+    expect(find.textContaining('ports 22, 443'), findsOneWidget);
+    expect(ranges.probePorts, isFalse);
+    await tester.tap(find.text('Export'));
+    await tester.pumpAndSettle();
+    expect(find.text('Save CSV file…'), findsOneWidget);
+    expect(find.text('Copy to clipboard'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

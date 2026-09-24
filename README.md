@@ -19,8 +19,18 @@ and scan results stay on your device.
   there before.
 - **Per device:** ping, port scan (with plain-language service names),
   open its web page, Wake-on-LAN, copy any detail (long-press).
-- **Tools tab:** public IP and provider, speed test, ping, traceroute, port
-  scan, DNS lookup, Wake-on-LAN.
+- **Range scan:** sweep other subnets or custom ranges, several at once
+  (`10.1.0.0/24, 10.2.5.1-120, 172.16.*.*`, single IPs). It keeps recent
+  ranges and keeps running if you leave the page. **Export** saves results
+  as a CSV file (the share sheet on Android) or copies them to the
+  clipboard. Ping-only by default; turn on "Also check common ports" to
+  catch hosts that ignore ping.
+  Routed subnets get hostnames and Windows names; MACs are only available
+  on your own segment.
+- **Tools tab:** range scan, public IP and provider, speed test, ping,
+  traceroute, port scan, DNS lookup, Wake-on-LAN.
+- Scans only when you tap **Scan**; on launch it just shows what it
+  remembers.
 - Light / dark / follow-system theme (⋮ menu).
 
 ### Network use outside your LAN
@@ -55,7 +65,8 @@ flutter test
 Code map:
 
 - `lib/net/`: discovery and tools (`prober`, `arp`, `mdns`, `ssdp`,
-  `netbios`, `oui`, `ports`, `ping`, `tools`, `wol`).
+  `netbios`, `oui`, `ports`, `ping`, `tools`, `wol`, `ip_range`).
+- `lib/state/range_scan_controller.dart`: the range scanner.
 - `lib/state/scan_controller.dart`: runs a scan and merges it with
   remembered devices (`device_store.dart`, a JSON file in the app's data folder).
 - `lib/models/device_type.dart`: type-guessing rules.

@@ -33,6 +33,10 @@ class ScanController extends ChangeNotifier {
   String phase = '';
   DateTime? lastScan;
 
+  /// False until a scan finishes this session; before that, remembered
+  /// devices are "not checked yet" rather than offline.
+  bool hasScanned = false;
+
   /// Online devices from the latest scan plus remembered offline ones.
   List<Device> devices = [];
 
@@ -289,6 +293,7 @@ class ScanController extends ChangeNotifier {
 
     devices = [...live, ...offline]..sort(_byIp);
     lastScan = scannedAt;
+    hasScanned = true;
     await _store.save(key, devices, scannedAt: scannedAt);
   }
 
