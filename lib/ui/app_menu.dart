@@ -99,8 +99,8 @@ class AppMenu extends StatelessWidget {
       applicationIcon: Image.asset('assets/icon/icon.png', width: 48, height: 48),
       children: const [
         Text(
-          'See who is on your network. No ads, no accounts, no tracking — '
-          'scan results stay on this device.\n\n'
+          'See who is on your network. Free and open source (GPL-3.0). '
+          'No account needed, and scan results stay on this device.\n\n'
           'The public IP lookup and speed test contact Cloudflare and '
           'ipinfo.io, and only when you tap them.\n\n'
           'MAC vendor names come from the Wireshark manufacturer database.',
