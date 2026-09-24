@@ -1,8 +1,21 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Release signing key, kept outside the project (see
+// packaging/create-signing-key.sh). NETWHO_KEY_PROPERTIES can point elsewhere.
+val keyPropsFile = file(
+    System.getenv("NETWHO_KEY_PROPERTIES")
+        ?: "${System.getProperty("user.home")}/.android-keys/netwho-key.properties"
+)
+val keyProps = Properties().apply {
+    if (keyPropsFile.exists()) keyPropsFile.inputStream().use { load(it) }
+}
+val hasReleaseKey = keyPropsFile.exists()
 
 android {
     namespace = "io.github.biptybop.netwho"
@@ -29,12 +42,39 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKey) {
+            create("release") {
+                storeFile = file(keyProps.getProperty("storeFile"))
+                storePassword = keyProps.getProperty("storePassword")
+                keyAlias = keyProps.getProperty("keyAlias")
+                keyPassword = keyProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Without the key, release builds stop (see the check below) unless
+            // NETWHO_ALLOW_DEBUG_SIGNING=1, e.g. someone building from source.
+            signingConfig = signingConfigs.getByName(if (hasReleaseKey) "release" else "debug")
         }
+    }
+}
+
+// A debug-signed release APK must never be published by accident, so fail
+// loudly instead of quietly falling back. `flutter run` is unaffected.
+gradle.taskGraph.whenReady {
+    val releasing = allTasks.any {
+        it.project.name == "app" && it.name.endsWith("Release") &&
+            (it.name.startsWith("assemble") || it.name.startsWith("bundle"))
+    }
+    if (releasing && !hasReleaseKey && System.getenv("NETWHO_ALLOW_DEBUG_SIGNING") != "1") {
+        throw GradleException(
+            "NetWho release key not found at $keyPropsFile.\n" +
+                "Create it with packaging/create-signing-key.sh, or set " +
+                "NETWHO_ALLOW_DEBUG_SIGNING=1 for a private, debug-signed build."
+        )
     }
 }
 

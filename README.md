@@ -111,10 +111,35 @@ Pixel 8 Pro.
 `compileSdk` is pinned to 37 in `android/app/build.gradle.kts` because
 `permission_handler` requires it.
 
-A release APK needs a signing key. Without one configured, `--release` falls
-back to debug signing. That's fine for sideloading (updates install over the
-old version as long as you build on the same machine), but not for the Play
-Store; see https://docs.flutter.dev/deployment/android#signing-the-app.
+### Release signing
+
+Release APKs are signed with NetWho's release key, which never lives in this
+repository. On the maintainer's machine it is in `~/.android-keys/`
+(created once with `packaging/create-signing-key.sh`), and the build finds
+it automatically. Point `NETWHO_KEY_PROPERTIES` at a different
+`key.properties` file to use another location.
+
+Without the key, `flutter build apk --release` stops with an error, so a
+debug-signed APK can't be published by accident. To build your own copy
+from source, either create your own key with the script or opt into debug
+signing:
+
+```bash
+NETWHO_ALLOW_DEBUG_SIGNING=1 flutter build apk --release --split-per-abi
+```
+
+Check which key signed an APK:
+
+```bash
+~/Android/Sdk/build-tools/36.0.0/apksigner verify --print-certs build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+```
+
+Official releases are signed by the certificate with this SHA-256
+fingerprint:
+
+```
+53:EF:EA:DB:D7:C0:4B:C0:FB:9F:DE:4A:75:5D:50:38:EB:4F:8E:7A:88:B9:27:2D:9C:B4:F0:F2:C1:02:DF:03
+```
 
 ## Credits
 
