@@ -4,6 +4,30 @@ See who's on your network, on Linux desktop and Android. A simple, free
 network scanner for keeping an eye on your home network. No account needed,
 and scan results stay on your device.
 
+## Install
+
+Download from the [latest release](https://github.com/biptybop/netwho/releases/latest).
+
+**Android:** install `netwho-…-android-arm64-v8a.apk` (any phone from the
+last several years; use `armeabi-v7a` for very old ones). Your browser or
+Files app will ask to allow installing apps from that source.
+
+**Linux (x86-64):** extract the tarball, then run the installer from that
+folder. It installs for your user only; no root needed:
+
+```bash
+tar xzf netwho-*-linux-x64.tar.gz
+cd netwho-*-linux-x64
+./install.sh
+```
+
+Uninstall with `~/.local/share/netwho/uninstall.sh`, adding `--purge` to
+also delete remembered devices.
+
+**Checking a download:** each release lists SHA-256 checksums
+(`sha256sum -c SHA256SUMS`). Official APKs are signed with the certificate
+listed under [Release signing](#release-signing).
+
 ## Features
 
 - **Device discovery:** sweeps your subnet with ping plus TCP probes, then
@@ -141,7 +165,17 @@ fingerprint:
 53:EF:EA:DB:D7:C0:4B:C0:FB:9F:DE:4A:75:5D:50:38:EB:4F:8E:7A:88:B9:27:2D:9C:B4:F0:F2:C1:02:DF:03
 ```
 
+## License
+
+NetWho is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version. See [LICENSE](LICENSE).
+
+Copyright (C) 2026 biptybop
+
 ## Credits
 
-MAC vendor data: [Wireshark manuf](https://www.wireshark.org/download/automated/data/manuf)
-(GPLv2 data file).
+MAC vendor names come from the IEEE registration authority's public
+registry, via Wireshark's [manuf](https://www.wireshark.org/download/automated/data/manuf)
+file (Wireshark is GPL-2.0-or-later).
