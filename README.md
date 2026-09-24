@@ -1,8 +1,8 @@
 # NetWho
 
-See who's on your network, on Linux desktop and Android. It's in the spirit
-of Fing, minus the ads, nags, accounts and tracking. Scan results stay on
-the device.
+See who's on your network, on Linux desktop and Android. A simple, free
+network scanner for keeping an eye on your home network. No account needed,
+and scan results stay on your device.
 
 ## Features
 
