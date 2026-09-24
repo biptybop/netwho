@@ -153,9 +153,6 @@ flutter build apk --release --split-per-abi
 Use `app-arm64-v8a-release.apk` (~20 MB) on any modern phone, e.g. the
 Pixel 8 Pro.
 
-`compileSdk` is pinned to 37 in `android/app/build.gradle.kts` because
-`permission_handler` requires it.
-
 ### Release signing
 
 Release APKs are signed with NetWho's release key, which never lives in this

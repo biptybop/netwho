@@ -19,7 +19,7 @@ val hasReleaseKey = keyPropsFile.exists()
 
 android {
     namespace = "io.github.biptybop.netwho"
-    compileSdk = 37 // permission_handler needs 37
+    compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

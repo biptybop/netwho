@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/services.dart';
 
 import '../models/device.dart';
 import '../net/local_network.dart';
@@ -235,8 +235,11 @@ class _NetworkCard extends StatelessWidget {
 
   Future<void> _showWifiName(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
-    final status = await Permission.locationWhenInUse.request();
-    if (!status.isGranted) {
+    var granted = false;
+    try {
+      granted = await const MethodChannel('netwho/location').invokeMethod<bool>('request') ?? false;
+    } catch (_) {}
+    if (!granted) {
       messenger.showSnackBar(const SnackBar(
         content: Text('Android only shares the Wi-Fi name with apps allowed to use location.'),
       ));
