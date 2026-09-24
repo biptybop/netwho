@@ -1,6 +1,6 @@
 # NetWho
 
-See who's on your network, on Linux desktop and Android. A simple, free
+See who's on your network, on Windows, Linux desktop and Android. A simple, free
 network scanner for keeping an eye on your home network. No account needed,
 and scan results stay on your device.
 
@@ -23,6 +23,19 @@ cd netwho-*-linux-x64
 
 Uninstall with `~/.local/share/netwho/uninstall.sh`, adding `--purge` to
 also delete remembered devices.
+
+**Windows 10/11 (x64):** run `netwho-…-windows-x64-setup.exe`. It installs
+for your user only, so no admin rights are needed. Or unzip
+`netwho-…-windows-x64.zip` anywhere and run `NetWho\netwho.exe` (portable).
+
+- The app isn't code-signed yet, so Windows SmartScreen may say "Windows
+  protected your PC". Click **More info → Run anyway**.
+- On the first scan, Windows Firewall asks whether NetWho may use the
+  network. Allow **private networks**, or device names from Bonjour/UPnP
+  won't come through (basic discovery still works).
+- **Using it at work?** Check with IT first. Network sweeps and port scans
+  look like attack traffic to security tools, and many workplaces require
+  approval to run them.
 
 **Checking a download:** each release lists SHA-256 checksums
 (`sha256sum -c SHA256SUMS`). Official APKs are signed with the certificate
@@ -66,11 +79,11 @@ on a fast connection.
 
 ## Platform notes
 
-| | Linux | Android |
-|---|---|---|
-| Finds devices | ✔ | ✔ |
-| MAC address and vendor | ✔ for every device | Only via NetBIOS/mDNS (Android 10+ blocks the ARP table) |
-| Wi-Fi name | ✔ | Tap **Show Wi-Fi name**; Android requires location permission for it |
+| | Windows | Linux | Android |
+|---|---|---|---|
+| Finds devices | ✔ | ✔ | ✔ |
+| MAC address and vendor | ✔ for every device | ✔ for every device | Only via NetBIOS/mDNS (Android 10+ blocks the ARP table) |
+| Wi-Fi name | ✔ (Windows 11 24H2+ may require location to be on) | ✔ | Tap **Show Wi-Fi name**; Android requires location permission for it |
 
 Android keys remembered devices by IP when it can't get a MAC, so if the
 router hands a device a new address, it can show up as a new device.
@@ -94,6 +107,9 @@ Code map:
 - `lib/state/scan_controller.dart`: runs a scan and merges it with
   remembered devices (`device_store.dart`, a JSON file in the app's data folder).
 - `lib/models/device_type.dart`: type-guessing rules.
+- `lib/net/windows/iphlpapi.dart`: Windows ping, adapters and ARP table,
+  called directly through FFI (no console tools, works in any system
+  language).
 - `android/.../MainActivity.kt`: holds a Wi-Fi multicast lock during scans
   so mDNS replies aren't filtered.
 
@@ -116,6 +132,11 @@ name, ID or icon changes:
 ```
 
 ## Building releases
+
+Windows can't be built on Linux. GitHub Actions
+(`.github/workflows/windows.yml`) builds and tests it on every push, and on
+each published release it attaches the Windows zip and installer and adds
+them to `SHA256SUMS`. The installer script is `packaging/windows/netwho.iss`.
 
 Linux bundle (output in `build/linux/x64/release/bundle/`):
 

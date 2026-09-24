@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:network_info_plus/network_info_plus.dart';
 
 import 'ipv4.dart';
+import 'windows/iphlpapi.dart' as win;
 
 /// The network this device is on, as far as we can tell.
 class LocalNetwork {
@@ -14,9 +15,12 @@ class LocalNetwork {
     this.gateway,
     this.mac,
     this.wifiName,
+    this.isWifi = true,
   });
 
+  /// Interface name on Linux/Android, adapter description on Windows.
   final String interfaceName;
+  final bool isWifi;
   final String ip;
   final int prefix;
   final String? gateway;
@@ -47,6 +51,7 @@ class NoNetworkException implements Exception {
 Future<LocalNetwork> detectLocalNetwork() async {
   LocalNetwork? net;
   if (Platform.isLinux) net = await _detectLinux();
+  if (Platform.isWindows) net = _detectWindows();
   if (net == null && Platform.isAndroid) net = await _detectAndroid();
   net ??= await _detectFallback();
   if (net == null) throw NoNetworkException();
@@ -105,11 +110,36 @@ Future<LocalNetwork?> _detectLinux() async {
           prefix: prefix,
           gateway: gateway,
           mac: mac,
+          isWifi: Directory('/sys/class/net/$name/wireless').existsSync(),
         );
       }
     }
   } catch (_) {}
   return null;
+}
+
+/// Prefers the adapter with a default gateway, like the Linux path; that
+/// skips Hyper-V/WSL/VPN virtual adapters, which normally have none.
+LocalNetwork? _detectWindows() {
+  try {
+    final adapters = win.windowsAdapters();
+    final pick = adapters.where((a) => a.gateway != null && _isPrivate(a.ip)).firstOrNull ??
+        adapters.where((a) => a.gateway != null).firstOrNull ??
+        adapters.where((a) => _isPrivate(a.ip)).firstOrNull;
+    if (pick == null) return null;
+    var prefix = prefixFromMask(pick.mask);
+    if (prefix < 8 || prefix > 30) prefix = 24;
+    return LocalNetwork(
+      interfaceName: pick.description,
+      ip: pick.ip,
+      prefix: prefix,
+      gateway: pick.gateway,
+      mac: pick.mac,
+      isWifi: pick.isWifi,
+    );
+  } catch (_) {
+    return null;
+  }
 }
 
 Future<LocalNetwork?> _detectAndroid() async {
@@ -139,7 +169,12 @@ Future<LocalNetwork?> _detectFallback() async {
     for (final a in iface.addresses) {
       final ip = a.address;
       if (_isPrivate(ip)) {
-        return LocalNetwork(interfaceName: iface.name, ip: ip, prefix: 24);
+        return LocalNetwork(
+          interfaceName: iface.name,
+          ip: ip,
+          prefix: 24,
+          isWifi: iface.name.startsWith('w'),
+        );
       }
     }
   }

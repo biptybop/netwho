@@ -42,6 +42,7 @@ dependencies:
   url_launcher: ^6.3.2
   file_selector: ^1.1.0
   share_plus: ^13.3.0
+  ffi: ^2.2.0
 
 dev_dependencies:
   flutter_test:

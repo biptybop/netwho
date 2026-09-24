@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'windows/iphlpapi.dart' as win;
+
 /// Result of one ICMP echo via the system `ping` binary, which works without
 /// root on both desktop Linux and Android.
 class PingReply {
@@ -25,6 +27,7 @@ Future<PingReply> pingOnce(
   Duration timeout = const Duration(seconds: 1),
   int? ttl,
 }) async {
+  if (Platform.isWindows) return _pingWindows(host, timeout, ttl);
   final secs = (timeout.inMilliseconds / 1000).ceil().clamp(1, 30);
   final args = ['-c', '1', '-W', '$secs', '-n'];
   if (ttl != null) args.addAll(['-t', '$ttl']);
@@ -48,8 +51,28 @@ Future<PingReply> pingOnce(
   return const PingReply();
 }
 
+/// Windows: ICMP through iphlpapi (see windows/iphlpapi.dart). Takes an IPv4
+/// address; names are resolved first.
+Future<PingReply> _pingWindows(String host, Duration timeout, int? ttl) async {
+  try {
+    var ip = host;
+    if (InternetAddress.tryParse(host) == null) {
+      final list = await InternetAddress.lookup(host, type: InternetAddressType.IPv4);
+      ip = list.first.address;
+    }
+    final r = await win.icmpEcho(ip, timeoutMs: timeout.inMilliseconds, ttl: ttl);
+    if (r == null) return const PingReply();
+    if (win.isTtlExceeded(r)) return PingReply(from: r.$2, ttlExceeded: true);
+    if (win.isEchoSuccess(r, ip)) {
+      return PingReply(timeMs: r.$3.toDouble(), from: r.$2);
+    }
+  } catch (_) {}
+  return const PingReply();
+}
+
 /// True if the system ping binary is usable at all.
 Future<bool> pingAvailable() async {
+  if (Platform.isWindows) return true;
   try {
     final r = await Process.run('ping', ['-c', '1', '-W', '1', '-n', '127.0.0.1']);
     return r.exitCode == 0;

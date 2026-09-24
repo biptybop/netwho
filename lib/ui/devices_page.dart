@@ -161,7 +161,7 @@ class _NetworkCard extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    net?.interfaceName.startsWith('w') ?? true
+                    net?.isWifi ?? true
                         ? Icons.wifi
                         : Icons.settings_ethernet,
                     color: theme.colorScheme.primary,
@@ -227,8 +227,11 @@ class _NetworkCard extends StatelessWidget {
     );
   }
 
-  String _ifaceLabel(LocalNetwork net) =>
-      net.interfaceName.startsWith('w') ? 'Wi-Fi (${net.interfaceName})' : 'Wired (${net.interfaceName})';
+  String _ifaceLabel(LocalNetwork net) {
+    final kind = net.isWifi ? 'Wi-Fi' : 'Wired';
+    // Windows adapter descriptions are long ("Intel(R) Wi-Fi 6E AX211 160MHz").
+    return Platform.isWindows ? kind : '$kind (${net.interfaceName})';
+  }
 
   Future<void> _showWifiName(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);

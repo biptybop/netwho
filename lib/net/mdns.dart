@@ -37,13 +37,22 @@ class MdnsBrowser {
     try {
       final client = MDnsClient(
         rawDatagramSocketFactory: (host, int port,
-                {bool reuseAddress = true, bool reusePort = false, int ttl = 1}) =>
-            RawDatagramSocket.bind(host, port,
+            {bool reuseAddress = true, bool reusePort = false, int ttl = 1}) async {
+          try {
+            return await RawDatagramSocket.bind(host, port,
                 reuseAddress: true,
-                // Dart can't set SO_REUSEPORT on Android; reuseAddress is
-                // enough there to share 5353 with the system resolver.
-                reusePort: reusePort && !Platform.isAndroid,
-                ttl: ttl),
+                // Dart can't set SO_REUSEPORT on Android or Windows;
+                // reuseAddress alone shares 5353 where the OS allows it.
+                reusePort: reusePort && !Platform.isAndroid && !Platform.isWindows,
+                ttl: ttl);
+          } on SocketException {
+            if (port != 5353) rethrow;
+            // Something (e.g. Windows' DNS Client) holds 5353 exclusively.
+            // Query from a random port instead: responders then answer us
+            // directly ("legacy unicast", RFC 6762 §6.7).
+            return RawDatagramSocket.bind(host, 0, reuseAddress: true, ttl: ttl);
+          }
+        },
       );
       await client.start(
         interfacesFactory: (type) async => (await NetworkInterface.list(

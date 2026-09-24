@@ -1,10 +1,19 @@
 import 'dart:io';
 
+import 'windows/iphlpapi.dart' as win;
+
 /// IP → MAC pairs from the kernel neighbour table.
 ///
-/// Works on desktop Linux. Android 10+ blocks apps from reading it, so there
+/// Works on desktop Linux and Windows. Android 10+ blocks apps from reading it, so there
 /// this returns an empty map and MACs come from NetBIOS where possible.
 Future<Map<String, String>> readArpTable() async {
+  if (Platform.isWindows) {
+    try {
+      return win.windowsArpTable();
+    } catch (_) {
+      return {};
+    }
+  }
   final table = <String, String>{};
   try {
     final lines = await File('/proc/net/arp').readAsLines();
